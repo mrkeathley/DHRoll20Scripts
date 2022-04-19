@@ -36,6 +36,7 @@ An example of a macro that selects the target and attacks with a Laspistol:
 - target: An optional field that is used to calculate range bonuses. Otherwise, the range can be passed using the range argument.
 - weapon: The name of a weapon in the dh_weapon_db.js file. This pulls the stats for the weapon for the attack.
 - additional_damage: Quick modifier to add an extra damage line in the output card and append to damage rolls.
+- eye_of_vengeance: True if a fate is being used for the Eye of Vengeance talent.
 - weaponreplace: This is followed with the desired key on the weapon to replace, a '|' character, and then the replacement. Multiple changes can be handled with the ';' character.
   - Example: `--weaponreplace|name|The Spark` -- This would replace the name field with a custom name for the weapon.
   - Example2: `--weaponreplace|penetration|6` -- This would replace the penetration of the weapon with 6.
@@ -56,10 +57,11 @@ An example of a macro that selects the target and attacks with a Laspistol:
 
 Macro | Images
 :---|:---:
-Using a source token, target token, and a default laspistol. Attack type and aim are prompts on usage.<pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--target\|@{target\|token_id}<br>--weapon\|Laspistol<br>--action\|weapon<br>--attack_type\|?{Attack Type\|standard\|semiauto}<br>--aim\|?{Aim\|none\|half\|full}<br>}}|![Example6](img/example_6.png)
+Using a source token, target token, and a default laspistol. Attack type and aim are prompts on usage.<pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--target\|@{target\|token_id}<br>--weapon\|Laspistol<br>--action\|weapon<br>--attack_type\|?{Attack Type\|standard\|semiauto}<br>--aim\|?{Aim\|none\|half\|full}<br>}}</pre>|![Example6](img/example_6.png)
 Using a source token, no target, range entered on usage. Grenade with deviation. <pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--range\|?{Range\|5}<br>--weapon\|Frag Grenade<br>--action\|weapon<br>--attack_type\|standard<br>--aim\|?{Aim\|none\|half\|full}<br>}}|![Example7](img/example_7.png)
-User has Blademaster talent. Custom sword with a modified name, additional qualities, and some additional expected attack types. <pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--weapon\|Sword<br>--action\|weapon<br>--weaponreplace\|name\|Engraved Blade<br>--specialreplace\|razor-sharp\|true;mono\|true<br>--attack_type\|?{Attack Type\|standard\|swift\|all-out}<br>--aim\|?{Aim\|none\|half\|full}<br>}}|![Example1](img/example_1.png)
-A Psykana macro that includes known Psykana, target, and effective rating. <pre>!dh {{<br>--source\|@{selected\|token_id}<br>--target\|@{target\|token_id}<br>--psykana\|?{Psykana\|Assail\|Molten Beam\|Spontaneous Combustion}<br>--effective_rating\|?{Effective Rating\|1}<br>--action\|psykana<br>}}|![Example8](img/example_8.png)
+User has Blademaster talent. Custom sword with a modified name, additional qualities, and some additional expected attack types. <pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--weapon\|Sword<br>--action\|weapon<br>--weaponreplace\|name\|Engraved Blade<br>--specialreplace\|razor-sharp\|true;mono\|true<br>--attack_type\|?{Attack Type\|standard\|swift\|all-out}<br>--aim\|?{Aim\|none\|half\|full}<br>}}</pre>|![Example1](img/example_1.png)
+User has Deathdealer, Mighty Shot, and using Eye of Vengeance talents. They rolled 10 degrees of success and had a Righteous Fury proc. <pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--target\|@{target\|token_id}<br>--weapon\|Bolt Pistol<br>--weaponreplace\|name\|The Spark<br>--specialreplace\|proven\|3;custom-grip\|true<br>--action\|weapon<br>--attack_type\|?{Attack Type\|standard\|semiauto}<br>--aim\|?{Aim\|none\|half\|full}<br>--eye_of_vengeance\|?{Eye of Vengeance\|false\|true}<br>}}</pre>|![Example9](img/example_9.png)
+A Psykana macro that includes known Psykana, target, and effective rating. <pre>!dh {{<br>--source\|@{selected\|token_id}<br>--target\|@{target\|token_id}<br>--psykana\|?{Psykana\|Assail\|Molten Beam\|Spontaneous Combustion}<br>--effective_rating\|?{Effective Rating\|1}<br>--action\|psykana<br>}}</pre>|![Example8](img/example_8.png)
 A custom named refractor field of good quality.<pre>!dh_2nd {{<br>--source\|@{selected\|token_id}<br>--gear\|Refractor Field<br>--gearreplace\|name\|Refractor Clasped Bandolier;quality\|good<br>--gear_action\|?{Action\|check\|activate\|deactivate}<br>}}</pre>|![Example4](img/example_4.png)
 
 
@@ -108,5 +110,8 @@ A custom named refractor field of good quality.<pre>!dh_2nd {{<br>--source\|@{se
 ### Supported Talents
 - Blademaster
 - Crushing Blow
+- Deathdealer
+- Eye of Vengeance
 - Hammer Blow
+- Inescapable Attack
 - Mighty Shot

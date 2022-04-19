@@ -4,8 +4,8 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
 
     // VERSION INFO
     const DarkHeresy_Author = 'Matt Keathley';
-    const DarkHeresy_Version = '2.0.0';
-    const DarkHeresy_LastUpdated = '2022-02-01';
+    const DarkHeresy_Version = '2.1.0';
+    const DarkHeresy_LastUpdated = '2022-04-19';
 
     // POWER CARDS
     var powerCardFunction = function () {};
@@ -146,7 +146,7 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
                         const key = replacement.split("|")[0].trim();
                         let value = replacement.split("|")[1].trim();
                         if(value === 'true' || value === 'false') {
-                            value = Boolean(value);
+                            value = toBoolean(value);
                         } else {
                             value = Number(value);
                         }
@@ -156,7 +156,11 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
             }
             
             if (tag === 'use_ammo') {
-                content = Boolean(content)
+                content = toBoolean(content)
+            }
+
+            if (tag === 'eye_of_vengeance') {
+                content = toBoolean(content)
             }
 
             // Ammo
@@ -217,21 +221,15 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
 
         switch (DarkHeresy.action) {
             case "weapon":
-                console.log('A')
                 if(!validateAndUpdateWeaponAction(DarkHeresy)) {
                     return;
                 }
-                console.log('B')
                 calculateWeaponTarget(DarkHeresy);
-                console.log('C')
                 await handleWeaponAttack(DarkHeresy);
-                console.log('D')
                 createWeaponResults(DarkHeresy);
-                console.log('E')
                 if(!DarkHeresy.melee && DarkHeresy.use_ammo) {
                     handleAmmo(DarkHeresy);
                 }
-                console.log('F')
                 sendResults(DarkHeresy);
                 break;
             case "psykana":
@@ -836,30 +834,39 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
 
         // Rolls
         const crits = [];
+        let righteous_fury = 10;
+        if(hasWeaponSpecial(DarkHeresy, 'vengeful')){
+            righteous_fury = DarkHeresy.weapon.special.vengeful;
+        }
+
+        log('Content', JSON.stringify(content));
         if (content.rolls) {
-            let righteous_fury = 10;
-            if(hasWeaponSpecial(DarkHeresy, 'vengeful')){
-                righteous_fury = DarkHeresy.weapon.special.vengeful;
-            }
             content.rolls.forEach(roll => {
                 if(roll.type === 'R') {
-                    if (roll.results.v >= righteous_fury) {
-                        crits.push(randomInteger(5));
-                    }
+                    roll.results.forEach(roll_result => {
+                        if (roll_result.v >= righteous_fury) {
+                            crits.push(randomInteger(5));
 
-                    // Lower to Primitive
-                    if (hasWeaponSpecial(DarkHeresy, 'primitive')) {
-                        if (roll.results.v > weapon.special.primitive) {
-                            addToModifierArray(damage_array, 'primitive', weapon.special.primitive - roll.results.v);
+                            if (hasTalent(DarkHeresy.character_id, 'Deathdealer')) {
+                                const stat_bonus = getStatBonus(DarkHeresy.character_id, 'Perception', 'Per');
+                                addToModifierArray(damage_array, 'deathdealer', stat_bonus);
+                            }
                         }
-                    }
 
-                    // Update Damage to proven amount
-                    if (hasWeaponSpecial(DarkHeresy, 'proven')) {
-                        if (roll.results.v < weapon.special.proven) {
-                            addToModifierArray(damage_array, 'proven', weapon.special.proven - roll.results.v);
+                        // Lower to Primitive
+                        if (hasWeaponSpecial(DarkHeresy, 'primitive')) {
+                            if (roll_result.v > weapon.special.primitive) {
+                                addToModifierArray(damage_array, 'primitive', weapon.special.primitive - roll_result.v);
+                            }
                         }
-                    }
+
+                        // Update Damage to proven amount
+                        if (hasWeaponSpecial(DarkHeresy, 'proven')) {
+                            if (roll_result.v < weapon.special.proven) {
+                                addToModifierArray(damage_array, 'proven', weapon.special.proven - roll_result.v);
+                            }
+                        }
+                    })
                 }
             })
         }
@@ -911,6 +918,11 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
                     if (accurate_two === 10) critical_hits++;
                     addToModifierArray(damage_array, 'accurate', accurate_two);
                 }
+            }
+
+            // Eye of Vengeance
+            if (!!DarkHeresy.eye_of_vengeance) {
+                addToModifierArray(damage_array, 'eye of vengeance', DarkHeresy.degrees_of_success);
             }
 
             // Might Shot Bonus
@@ -990,6 +1002,11 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
                 }
             }
 
+            // Eye of Vengeance
+            if (!!DarkHeresy.eye_of_vengeance) {
+                addToModifierArray(penetration_array, 'eye of vengeance', DarkHeresy.degrees_of_success);
+            }
+
             // Melta
             if (hasWeaponSpecial(DarkHeresy, 'melta') &&
                 (DarkHeresy.range_name === 'short range' || DarkHeresy.range_name === 'point blank')) {
@@ -1032,6 +1049,17 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
         if (DarkHeresy.blademaster) {
             power_card.push('--Blademaster| Original roll of **' + DarkHeresy.original_roll + '** rerolled due to //Blademaster//!');
         }
+        // Check Inescapable Attack
+        if (hasTalent(DarkHeresy.character_id, 'Inescapable Attack') &&
+            DarkHeresy.degrees_of_success > 0 &&
+            (DarkHeresy.attack_type === 'all-out' ||
+                DarkHeresy.attack_type === 'charge' ||
+                DarkHeresy.attack_type === 'standard' ||
+                DarkHeresy.attack_type === 'stun' ||
+                DarkHeresy.attack_type === 'called-shot')) {
+            power_card.push('--Inescapable Attack| Penalty to all evasion attempts of  **[[' + DarkHeresy.degrees_of_success + ' * -10]]**!');
+        }
+
 
         /** Weapon Special **/
         power_card.push(...createWeaponSpecialResults(DarkHeresy));
@@ -1103,6 +1131,9 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
                     }
 
                     power_card.push(hit_text + 'for ' + arrayToCardText(hit.damage_array) + ' damage (//' + DarkHeresy.weapon.damageType + '//) with ' + arrayToCardText(hit.penetration) + ' penetration!');
+                    if (hit.crits && hit.crits.length > 0) {
+                        power_card.push('--Righteous Fury| A critical success roll of **[[' + hit.crits[0] + "]]**!");
+                    }
                 }
             }
         }
@@ -1469,6 +1500,23 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
             measurement: unitScale * distance / gridUnitSize,
             measurement_string: '' + (unitScale * distance / gridUnitSize) + unit // Ruler measurement as a string
         };
+    }
+
+    function toBoolean(value) {
+        if (typeof (value) === 'string') {
+            value = value.trim().toLowerCase();
+        }
+        switch (value) {
+            case true:
+            case 'true':
+            case 1:
+            case '1':
+            case 'on':
+            case 'yes':
+                return true;
+            default:
+                return false;
+        }
     }
 
     return {
