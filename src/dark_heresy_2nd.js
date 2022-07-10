@@ -1111,13 +1111,12 @@ var DarkHeresy2nd = DarkHeresy2nd || (function () {
             for (let i = 0; i < DarkHeresy.hits.length; i++) {
                 const hit = DarkHeresy.hits[i];
                 if (calculateModifierArray(hit.damage_array) > 0) {
-                    let index = '';
                     let hit_text = '';
 
                     if (i === 0) {
-                        hit_text = '--Damage ' + index + '| ';
+                        hit_text = '--Damage | ';
                     } else {
-                        hit_text = '--Additional Hit ' + index + '| ';
+                        hit_text = '--Additional Hit ' + i + ' | ';
                     }
 
                     hit_text += 'The target is hit in the //' + hit.hit_location + '// ';
